@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGI System Core - Vibe Coding Environment</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --sidebar-bg: #252526;
+            --activity-bar-bg: #333333;
+            --status-bar-bg: #007acc;
+            --status-bar-warn: #D16D06;
+            --status-bar-error: #C72E0F;
+            --tab-bg: #2d2d2d;
+            --tab-active-bg: #1e1e1e;
+            --text-color: #cccccc;
+            --line-number-color: #858585;
+            --selection-color: #264f78;
+            --cursor-color: #d4d4d4;
+            --terminal-bg: #1e1e1e;
+            --scrollbar-bg: #424242;
+
+            /* Syntax Highlighting (Dark+) */
+            --kwd: #569cd6;
+            /* Keyword */
+            --kwd-c: #c586c0;
+            /* Control Keyword */
+            --str: #ce9178;
+            /* String */
+            --num: #b5cea8;
+            /* Number */
+            --var: #9cdcfe;
+            /* Variable */
+            --func: #dcdcaa;
+            /* Function */
+            --type: #4ec9b0;
+            /* Type */
+            --cmt: #6a9955;
+            /* Comment */
+            --macro: #dcdcaa;
+            /* Macro */
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            /* Prevent selection for realism */
+        }
+
+        /* --- Layout Grid --- */
+        .workspace {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 22px);
+        }
+
+        /* --- Activity Bar (Leftmost) --- */
+        .activity-bar {
+            width: 48px;
+            background-color: var(--activity-bar-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            z-index: 10;
+        }
+
+        .activity-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: #858585;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .activity-icon.active {
+            color: white;
+            border-left: 2px solid white;
+        }
+
+        .activity-icon:hover {
+            color: white;
+        }
+
+        .badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #007acc;
+            color: white;
+            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        /* --- Sidebar (Explorer) --- */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+            font-size: 13px;
+        }
+
+        .sidebar-header {
+            padding: 10px 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .file-tree {
+            padding-top: 5px;
+        }
+
+        .folder-item {
+            padding: 4px 10px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        .folder-arrow {
+            font-size: 10px;
+            margin-right: 5px;
+            transition: transform 0.2s;
+        }
+
+        .folder-open .folder-arrow {
+            transform: rotate(90deg);
+        }
+
+        .file-list {
+            display: none;
+            margin-left: 10px;
+            border-left: 1px solid #333;
+        }
+
+        .folder-open .file-list {
+            display: block;
+        }
+
+        .file-item {
+            padding: 3px 10px 3px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .file-item:hover {
+            background-color: #2a2d2e;
+        }
+
+        .file-item.active {
+            background-color: #37373d;
+            color: white;
+        }
+
+        .file-icon {
+            margin-right: 6px;
+            width: 16px;
+            text-align: center;
+        }
+
+        .git-status {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: bold;
+            color: #d7ba7d;
+            /* Modified */
+        }
+
+        .git-added {
+            color: #58a6ff;
+        }
+
+        /* Added */
+
+        /* --- Main Editor Area --- */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-color);
+            position: relative;
+        }
+
+        /* Tabs */
+        .tab-bar {
+            background-color: var(--bg-color);
+            /* VS Code default helps blend */
+            display: flex;
+            height: 35px;
+            overflow-x: auto;
+            background: #252526;
+        }
+
+        .tab {
+            padding: 0 10px;
+            min-width: 120px;
+            max-width: 200px;
+            background-color: var(--tab-bg);
+            color: #969696;
+            border-right: 1px solid #1e1e1e;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background-color: var(--tab-active-bg);
+            color: white;
+            border-top: 1px solid #007acc;
+        }
+
+        .tab-icon {
+            margin-right: 6px;
+        }
+
+        .tab-close {
+            font-size: 14px;
+            margin-left: 8px;
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+
+        .tab-close:hover {
+            background-color: #444;
+            color: white;
+        }
+
+        /* Code View */
+        .editor-workspace {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .editor-gutter {
+            width: 50px;
+            background-color: var(--bg-color);
+            color: var(--line-number-color);
+            text-align: right;
+            font-size: 14px;
+            padding-right: 15px;
+            padding-top: 10px;
+            border-right: 1px solid #333;
+            /* subtle separator */
+            user-select: none;
+        }
+
+        .code-view {
+            flex: 1;
+            padding: 10px 0 0 10px;
+            font-size: 14px;
+            line-height: 20px;
+            overflow: hidden;
+            white-space: pre;
+            position: relative;
+        }
+
+        /* Minimap (Approximation) */
+        .minimap {
+            width: 60px;
+            height: 100%;
+            background-color: #1e1e1e;
+            opacity: 0.8;
+            border-left: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .minimap-content {
+            transform: scale(0.15);
+            transform-origin: top left;
+            width: 600%;
+            /* Compensate scale */
+            pointer-events: none;
+            padding-top: 10px;
+        }
+
+        /* --- Right Sidebar (AI Assistant) --- */
+        .ai-sidebar {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            border-left: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ai-header {
+            padding: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border-bottom: 1px solid #333;
+            background: #252526;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13px;
+        }
+
+        .chat-msg {
+            margin-bottom: 12px;
+            padding: 8px;
+            border-radius: 4px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .chat-msg.system {
+            background: #2d2d30;
+            border-left: 3px solid #007acc;
+        }
+
+        .chat-msg.thinking {
+            color: #858585;
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .chat-msg.success {
+            border-left: 3px solid #4ec9b0;
+            background: #1e3a2f;
+        }
+
+        /* --- Panel (Terminal) --- */
+        .panel {
+            height: 200px;
+            background-color: var(--terminal-bg);
+            border-top: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            gap: 20px;
+            padding: 5px 15px;
+            border-bottom: 1px solid #333;
+            text-transform: uppercase;
+            font-size: 11px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .panel-tab.active {
+            color: white;
+            border-bottom: 1px solid white;
+        }
+
+        .terminal-content {
+            flex: 1;
+            padding: 10px;
+            font-size: 12px;
+            color: #cccccc;
+            font-family: 'Consolas', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column-reverse;
+            /* Pin to bottom */
+        }
+
+        .term-line {
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .term-prompt {
+            color: #98c379;
+        }
+
+        .term-path {
+            color: #61afef;
+        }
+
+        .term-error {
+            color: #e06c75;
+        }
+
+        .term-warn {
+            color: #e5c07b;
+        }
+
+        .term-info {
+            color: #98c379;
+        }
+
+        .term-progress {
+            color: #569cd6;
+        }
+
+        /* --- Status Bar --- */
+        .status-bar {
+            height: 22px;
+            background-color: var(--status-bar-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            font-size: 11px;
+            color: white;
+            z-index: 20;
+        }
+
+        .status-section {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .status-item:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        /* Sync icon rotation */
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinning {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        /* --- Animations & Effects --- */
+        /* Blinking Cursor */
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #d4d4d4;
+            animation: blink 1s step-end infinite;
+            vertical-align: bottom;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Intellisense Popup */
+        .intellisense {
+            position: absolute;
+            background: #252526;
+            border: 1px solid #454545;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 250px;
+            z-index: 100;
+            display: none;
+            font-size: 13px;
+        }
+
+        .intellisense-item {
+            padding: 2px 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+        }
+
+        .intellisense-item.selected {
+            background: #04395e;
+            color: white;
+        }
+
+        .icon-box {
+            width: 14px;
+            height: 14px;
+            background: var(--kwd);
+            /* placeholder */
+            display: inline-block;
+        }
+
+        /* Syntax Color Helpers */
+        .h-kwd {
+            color: var(--kwd);
+        }
+
+        .h-str {
+            color: var(--str);
+        }
+
+        .h-func {
+            color: var(--func);
+        }
+
+        .h-var {
+            color: var(--var);
+        }
+
+        .h-cmt {
+            color: var(--cmt);
+        }
+
+        .h-type {
+            color: var(--type);
+        }
+
+        .h-num {
+            color: var(--num);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="workspace">
+        <!-- Vertical Activity Bar -->
+        <div class="activity-bar">
+            <div class="activity-icon active">📄<div class="badge" id="file-badge">2</div>
+            </div>
+            <div class="activity-icon">🔍</div>
+            <div class="activity-icon">🕊️<div class="badge">12</div>
+            </div> <!-- Git -->
+            <div class="activity-icon">🐞</div>
+            <div class="activity-icon">🧩</div>
+            <div style="flex:1"></div>
+            <div class="activity-icon">⚙️</div>
+        </div>
+
+        <!-- Sidebar Explorer -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>Explorer</span>
+                <span>...</span>
+            </div>
+            <div class="sidebar-header" style="background:#333; margin-top:0px;">
+                <span>vibe-coding-system</span>
+            </div>
+            <div class="file-tree" id="file-tree">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Main Editor Area -->
+        <div class="editor-container">
+            <!-- Tabs -->
+            <div class="tab-bar" id="tab-bar">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Code -->
+            <div class="editor-workspace">
+                <div class="editor-gutter" id="gutter">
+                    <!-- Line numbers -->
+                </div>
+                <div class="code-view" id="code-view">
+                    <!-- Typing happens here -->
+                </div>
+                <!-- Intellisense Popup -->
+                <div class="intellisense" id="intellisense">
+                    <div class="intellisense-item selected"><span class="icon-box"
+                            style="background:#c586c0"></span>OptimizationStrategy</div>
+                    <div class="intellisense-item"><span class="icon-box"
+                            style="background:#dcdcaa"></span>optimize_neural_net</div>
+                    <div class="intellisense-item"><span class="icon-box" style="background:#9cdcfe"></span>opt_level
+                    </div>
+                </div>
+
+                <div class="minimap">
+                    <div class="minimap-content" id="minimap-content">
+                        <!-- Mirror code here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-tab">PROBLEMS</div>
+                    <div class="panel-tab">OUTPUT</div>
+                    <div class="panel-tab active">TERMINAL</div>
+                    <div class="panel-tab">DEBUG CONSOLE</div>
+                    <div style="flex:1"></div>
+                    <div class="panel-tab">bash +</div>
+                </div>
+                <div class="terminal-content">
+                    <div id="terminal-lines"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right AI Sidebar -->
+        <div class="ai-sidebar">
+            <div class="ai-header">
+                <span>🤖 AI COLLABORATOR (BETA)</span>
+                <span>...</span>
+            </div>
+            <div class="chat-container" id="chat-container">
+                <!-- AI thoughts go here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="status-bar">
+        <div class="status-section">
+            <div class="status-item" style="background:#16825D; padding: 0 5px;">><span
+                    style="transform:rotate(180deg)">⚡</span> SSH: Remote</div>
+            <div class="status-item"><span style="margin-right:5px">🚫</span>0 <span style="margin-right:5px">⚠️</span>0
+            </div>
+            <div class="status-item" id="git-branch"><span style="margin-right:5px">🕊️</span>main*</div>
+            <div class="status-item" id="sync-status"><span class="spinning">💫</span> Syncing...</div>
+        </div>
+        <div class="status-section">
+            <div class="status-item" id="cursor-pos">Ln 12, Col 45</div>
+            <div class="status-item">UTF-8</div>
+            <div class="status-item" id="lang-mode">Python</div>
+            <div class="status-item">Prettier</div>
+            <div class="status-item">🔔</div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration: The "Vibe" Scenarios ---
+
+        const scenarios = [
+            {
+                name: "quantum_core.rs",
+                lang: "Rust",
+                icon: "🦀", // Rustacean
+                gitStat: "M",
+                color: "#CE412B",
+                content: `use std::sync::{Arc, Mutex};
+use tokio::sync::mpsc;
+
+/// The core quantum processing unit for the vibe engine
+pub struct QuantumVibe {
+    entropy_pool: Arc<Mutex<Vec<f64>>>,
+    coherence_factor: f64,
+}
+
+impl QuantumVibe {
+    pub fn new() -> Self {
+        log::info!("Initializing Quantum Vibe Engine...");
+        let pool = (0..1024).map(|_| rand::random::<f64>()).collect();
+        
+        Self {
+            entropy_pool: Arc::new(Mutex::new(pool)),
+            coherence_factor: 0.997, # Correction: adjust precision
+        }
+    }
+
+    /// Asynchronously collapses the wavefunction
+    pub async fn collapse_wavefunction(&self, intensity: f64) -> Result<f64, VibeError> {
+        let mut pool = self.entropy_pool.lock().unwrap();
+        
+        // Critical Section: Re-balancing matrix
+        if intensity > 1.0 {
+            log::warn!("Intensity overflow! Dampening field...");
+            return Ok(self.coherence_factor * 0.5);
+        }
+
+        // Apply heuristic optimization
+        let result = pool.iter().sum::<f64>() / intensity;
+        Ok(result)
+    }
+}`,
+                logs: [
+                    "Compiling vibe-core v0.1.0 (C:/projects/vibe-core)...",
+                    "   Compiling tokio v1.28.0",
+                    "   Compiling serde v1.0.163",
+                    "warning: unused variable: `ctx`",
+                    "   --> src/main.rs:45:9",
+                    "    |",
+                    "45  |     let ctx = Context::new();",
+                    "    |         ^^^ help: if this is intentional, prefix it with an underscore: `_ctx`",
+                    "Finished dev [unoptimized + debuginfo] target(s) in 2.4s",
+                    "Running `target/debug/vibe-core`",
+                    "[INFO] Quantum coherence established at 99.7%",
+                    "[WARN] Entropy pool low, regenerating...",
+                    "[INFO] Vibe check passed."
+                ],
+                chat: [
+                    { type: 'thinking', text: 'Analyzing thread safety in Mutex lock...' },
+                    { type: 'system', text: 'Detected potential deadlock in collapse_wavefunction. Recommending async mutex pattern.' },
+                    { type: 'success', text: 'Refactored to use tokio::sync::Mutex for non-blocking locks.' },
+                    { type: 'thinking', text: 'Optimizing memory layout for cache locality...' }
+                ],
+                intellisense: ["entropy_pool", "collapse_wavefunction", "coherence_factor", "Arc::new"]
+            },
+            {
+                name: "NeuralNetwork.py",
+                lang: "Python",
+                icon: "🐍",
+                gitStat: "A",
+                color: "#FFE873",
+                content: `import torch
+import torch.nn as nn
+import torch.optim as optim
+from transformers import AutoModel, AutoTokenizer
+
+class VibeTransformer(nn.Module):
+    def __init__(self, hidden_dim=768, num_heads=12):
+        super(VibeTransformer, self).__init__()
+        self.embedding = nn.Embedding(50000, hidden_dim)
+        self.encoder = nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=num_heads)
+        self.output_head = nn.Linear(hidden_dim, 1)
+
+    def forward(self, x):
+        # Embed the input sequence
+        x = self.embedding(x)
+        
+        # Apply self-attention mechanism
+        # Optimization: Use FlashAttention for 3x speedup
+        x = self.encoder(x)
+        
+        # Aggregate logic
+        return torch.sigmoid(self.output_head(x.mean(dim=1)))
+
+# Initialize Training Loop
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = VibeTransformer().to(device)
+optimizer = optim.AdamW(model.parameters(), lr=5e-5)
+
+print(f"Model deployed on {device} with {sum(p.numel() for p in model.parameters())} params")`,
+                logs: [
+                    "Cuda support: ENABLED (NVIDIA RTX 4090)",
+                    "Loading pretrained weights for 'bert-base-uncased'...",
+                    "Downloading: 100% |██████████| 440M/440M [00:12<00:00, 35.2MB/s]",
+                    "Epoch 1/100 commenced...",
+                    "Batch 100: Loss = 0.4521, Accuracy = 82%",
+                    "Batch 200: Loss = 0.3102, Accuracy = 89%",
+                    "Batch 300: Loss = 0.1504, Accuracy = 94%",
+                    "[INFO] Convergence detected. Adjusting learning rate...",
+                    "Saving checkpoint to /models/vibe_v1.pth..."
+                ],
+                chat: [
+                    { type: 'thinking', text: 'Scanning for GPU bottlenecks...' },
+                    { type: 'system', text: 'Recommendation: Enable mixed-precision training (FP16) to reduce VRAM usage by 40%.' },
+                    { type: 'thinking', text: 'Implementing gradient scaling...' },
+                    { type: 'success', text: 'Applied Automatic Mixed Precision (AMP).' }
+                ],
+                intellisense: ["torch.cuda", "nn.Linear", "nn.TransformerEncoderLayer", "optimizer.step"]
+            },
+            {
+                name: "Dashboard.tsx",
+                lang: "TypeScript React",
+                icon: "⚛️",
+                gitStat: "M",
+                color: "#61DAFB",
+                content: `import React, { useState, useEffect, useMemo } from 'react';
+import { VibeChart } from './components/Charts';
+import { useDataStream } from './hooks/useStream';
+
+interface Props {
+  userId: string;
+  theme: 'dark' | 'light';
+}
+
+export const Dashboard: React.FC<Props> = ({ userId, theme }) => {
+  const [metrics, setMetrics] = useState<Metric[]>([]);
+  const { stream, isConnected } = useDataStream(userId);
+
+  // Memoize heavy calculations to prevent re-renders
+  const processedData = useMemo(() => {
+    return metrics.map(m => ({
+      ...m,
+      value: m.value * 1.5, // Scaling factor
+      timestamp: new Date(m.time).toLocaleTimeString()
+    }));
+  }, [metrics]);
+
+  useEffect(() => {
+    if (!stream) return;
+    
+    const handleUpdate = (data: any) => {
+      setMetrics(prev => [...prev.slice(-50), data]);
+    };
+
+    stream.on('data', handleUpdate);
+    return () => stream.off('data', handleUpdate);
+  }, [stream]);
+
+  if (!isConnected) return <div className="loader">Connecting to VibeNet...</div>;
+
+  return (
+    <div className={\`dashboard \${theme}\`}>
+      <h1>System Status: ONLINE</h1>
+      <VibeChart data={processedData} color="#00ff00" />
+    </div>
+  );
+};`,
+                logs: [
+                    "[webpack-cli] Compilation starting...",
+                    "[eslint] 0 errors, 0 warnings",
+                    "Files successfully emitted",
+                    "Waiting for file changes...",
+                    "   98% after emitting CopyPlugin",
+                    "   99% after emitting",
+                    "Compiled successfully.",
+                    "[HMR] Waiting for update signal from WDS...",
+                    "[HMR] bundle.js updated"
+                ],
+                chat: [
+                    { type: 'thinking', text: 'Reviewing React render cycles...' },
+                    { type: 'system', text: 'Detected unnecessary re-render in Dashboard component. Logic implies `stream` object identity changes too often.' },
+                    { type: 'thinking', text: 'Refactoring to separate socket logic from UI presentation...' },
+                    { type: 'success', text: 'Performance score increased by 15%.' }
+                ],
+                intellisense: ["useMemo", "useEffect", "useState", "processedData"]
+            }
+        ];
+
+        // --- State & DOM ---
+        let currentScenarioIdx = -1;
+        let lines = [];
+        let isTyping = false;
+        let cursorLine = 1;
+        let typingSpeedDefault = 40; // ms per char
+
+        const fileTreeEl = document.getElementById('file-tree');
+        const tabBarEl = document.getElementById('tab-bar');
+        const codeViewEl = document.getElementById('code-view');
+        const gutterEl = document.getElementById('gutter');
+        const minimapEl = document.getElementById('minimap-content');
+        const terminalEl = document.getElementById('terminal-lines');
+        const chatEl = document.getElementById('chat-container');
+        const langModeEl = document.getElementById('lang-mode');
+        const cursorPosEl = document.getElementById('cursor-pos');
+        const intellisenseEl = document.getElementById('intellisense');
+
+        // --- Core Logic ---
+
+        function initialize() {
+            renderFileTree();
+            switchScenario(0);
+            loop();
+        }
+
+        function renderFileTree() {
+            const root = document.createElement('div');
+            root.className = 'folder-item folder-open';
+            root.innerHTML = `<span class="folder-arrow">▶</span> src`;
+
+            const list = document.createElement('div');
+            list.className = 'file-list';
+
+            scenarios.forEach((sc, idx) => {
+                const div = document.createElement('div');
+                div.className = `file-item ${idx === 0 ? 'active' : ''}`;
+                div.id = `file-${idx}`;
+                div.innerHTML = `
+                <span class="file-icon" style="color: ${sc.color}">${sc.icon}</span>
+                ${sc.name}
+                <span class="git-status ${sc.gitStat === 'A' ? 'git-added' : ''}">${sc.gitStat}</span>
+            `;
+                list.appendChild(div);
+            });
+
+            root.appendChild(list);
+            fileTreeEl.appendChild(root);
+        }
+
+        function switchScenario(idx) {
+            currentScenarioIdx = idx;
+            const sc = scenarios[idx];
+
+            // Update Sidebar UI
+            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`file-${idx}`).classList.add('active');
+
+            // Update Tabs
+            tabBarEl.innerHTML = `
+            <div class="tab active">
+                <span class="tab-icon" style="color: ${sc.color}">${sc.icon}</span>
+                ${sc.name}
+                <span class="tab-close">×</span>
+            </div>
+            ${scenarios.filter((_, i) => i !== idx).slice(0, 2).map(s => `
+                <div class="tab">
+                    <span class="tab-icon" style="color: ${s.color}">${s.icon}</span>
+                    ${s.name}
+                    <span class="tab-close">×</span>
+                </div>
+            `).join('')}
+        `;
+
+            // Update Status Bar
+            langModeEl.innerText = sc.lang;
+
+            // Clear Editor
+            codeViewEl.innerHTML = '';
+            gutterEl.innerHTML = '';
+            minimapEl.innerHTML = '';
+            lines = [];
+            cursorLine = 1;
+
+            // Start Typing Sequence
+            startTyping(sc);
+        }
+
+        async function startTyping(scenario) {
+            if (isTyping) return; // simpler handling
+            isTyping = true;
+
+            // Clear terminal and chat for new context slightly
+            terminalEl.innerHTML = '';
+            chatEl.innerHTML = '';
+
+            // Initial Chat
+            addchat({ type: 'thinking', text: `Loading context for ${scenario.name}...` });
+
+            // Content chunking
+            const fullContent = scenario.content;
+            const chunks = fullContent.split('\n'); // Line by line for easier handling
+
+            for (let i = 0; i < chunks.length; i++) {
+                let lineContent = chunks[i];
+
+                // Add Line to DOM
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'line-content';
+                codeViewEl.appendChild(lineDiv);
+
+                // Gutter
+                const numDiv = document.createElement('div');
+                numDiv.innerText = i + 1;
+                gutterEl.appendChild(numDiv);
+
+                // Scroll if needed
+                lineDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+                updateCursorPos(i + 1, 0);
+
+                // Typing Animation
+                // Sometimes we make a "mistake" and fix it
+                if (Math.random() > 0.8 && lineContent.length > 5) {
+                    await typeLineWithMistake(lineDiv, lineContent, scenario);
+                } else {
+                    await typeLine(lineDiv, lineContent, scenario);
+                }
+
+                // Sync Minimap
+                minimapEl.innerText = codeViewEl.innerText;
+
+                // Occasional Events
+                if (Math.random() > 0.7) addTerminalLog(scenario);
+                if (i === 3 || i === 10) addChatThinking(scenario);
+            }
+
+            // Finished file, wait then switch
+            isTyping = false;
+            await sleep(3000);
+            switchScenario((currentScenarioIdx + 1) % scenarios.length);
+        }
+
+        async function typeLine(element, text, scenario) {
+            if (!text) return;
+
+            // Split by tokens loosely for highlighting simulation (simulated)
+            // In reality, we just append text and colorize the whole line periodically or use simple regex
+
+            let currentText = "";
+
+            for (let j = 0; j < text.length; j++) {
+                currentText += text[j];
+                element.innerHTML = syntaxHighlight(currentText, scenario.lang) + '<span class="cursor"></span>';
+
+                // Intellisense trigger on dot or capital letter
+                if (text[j] === '.' || (text[j] === text[j].toUpperCase() && text[j] !== ' ')) {
+                    if (Math.random() > 0.5) await showIntellisense(element, scenario);
+                }
+
+                updateCursorPos(cursorLine, j + 1);
+                await sleep(typingSpeedDefault + Math.random() * 20);
+            }
+            // Remove cursor from line end
+            element.innerHTML = syntaxHighlight(currentText, scenario.lang);
+            cursorLine++;
+        }
+
+        async function typeLineWithMistake(element, text, scenario) {
+            const mistakeLen = 4;
+            const mistakeText = text.substring(0, text.length - 2) + "errox"; // wrong end
+
+            // Type wrong
+            for (let ch of mistakeText) {
+                element.innerHTML = syntaxHighlight(element.innerText + ch, scenario.lang) + '<span class="cursor"></span>';
+                await sleep(30);
+            }
+            await sleep(400); // realize mistake
+
+            // Backspace
+            let content = element.innerText; // plain txt
+            for (let k = 0; k < mistakeLen + 5; k++) {
+                content = content.slice(0, -1);
+                element.innerHTML = syntaxHighlight(content, scenario.lang) + '<span class="cursor"></span>';
+                await sleep(50);
+            }
+
+            // Type correct
+            await typeLine(element, text, scenario);
+        }
+
+        async function showIntellisense(element, scenario) {
+            const rect = element.getBoundingClientRect();
+            intellisenseEl.style.top = (rect.top + 20) + 'px';
+            intellisenseEl.style.left = (rect.left + (element.innerText.length * 8)) + 'px'; // approx
+            intellisenseEl.style.display = 'block';
+
+            // Custom items
+            intellisenseEl.innerHTML = scenario.intellisense.slice(0, 3).map((item, i) => `
+            <div class="intellisense-item ${i === 0 ? 'selected' : ''}"><span class="icon-box" style="background:${i === 0 ? '#c586c0' : '#9cdcfe'}"></span>${item}</div>
+        `).join('');
+
+            await sleep(600); // pause to "select"
+            intellisenseEl.style.display = 'none';
+        }
+
+        // --- Helpers ---
+
+        function syntaxHighlight(code, lang) {
+            // Very basic regex-based highlighting for visual flair
+            // Not a perfect lexer, just enough to look convincing
+            let html = code
+                .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/\b(import|from|class|def|return|if|else|pub|use|impl|fn|let|const|var|async|await|struct|interface|export)\b/g, '<span class="h-kwd">$1</span>')
+                .replace(/\b(self|this)\b/g, '<span class="h-kwd">$1</span>')
+                .replace(/("[^"]*")/g, '<span class="h-str">$1</span>')
+                .replace(/\b(\d+)\b/g, '<span class="h-num">$1</span>')
+                .replace(/\b(log|console|print|Ok|Err|Some|None|Vec|Arc|Mutex|useState|useEffect)\b/g, '<span class="h-type">$1</span>')
+                .replace(/#.*$/g, '<span class="h-cmt">$&</span>') // Python/Rust comments
+                .replace(/\/\/.*$/g, '<span class="h-cmt">$&</span>'); // JS comments
+
+            return html;
+        }
+
+        function addTerminalLog(scenario) {
+            const log = scenario.logs[Math.floor(Math.random() * scenario.logs.length)];
+            const div = document.createElement('div');
+            div.className = 'term-line';
+            const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+            // Style based on content
+            let content = `<span style="color:#666">[${timestamp}]</span> ${log}`;
+            if (log.includes("WARN")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-warn">${log}</span>`;
+            if (log.includes("Error")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-error">${log}</span>`;
+            if (log.includes("INFO") || log.includes("successfully")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-info">${log}</span>`;
+            if (log.includes("Compiling") || log.includes("Downloading")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-progress">${log}</span>`;
+
+            div.innerHTML = content;
+            terminalEl.prepend(div); // Newest at top for this layout (flex-reverse handles visual)
+
+            if (terminalEl.children.length > 20) terminalEl.removeChild(terminalEl.lastChild);
+        }
+
+        function addChatThinking(scenario) {
+            const msg = scenario.chat[Math.floor(Math.random() * scenario.chat.length)];
+            addchat(msg);
+        }
+
+        function addchat(msgObj) {
+            const div = document.createElement('div');
+            div.className = `chat-msg ${msgObj.type}`;
+            div.innerText = msgObj.text;
+            chatEl.appendChild(div);
+            chatEl.scrollTop = chatEl.scrollHeight;
+        }
+
+        function updateCursorPos(ln, col) {
+            cursorPosEl.innerText = `Ln ${ln}, Col ${col}`;
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+        function loop() {
+            // Background tasks independent of typing
+            setInterval(() => {
+                const spin = document.querySelector('.spinning');
+                spin.style.display = (Math.random() > 0.5) ? 'inline-block' : 'none';
+                document.getElementById('sync-status').innerHTML = (Math.random() > 0.5) ? '<span class="spinning">💫</span> Syncing...' : '☁️ All changes saved';
+            }, 4000);
+        }
+
+        // Start
+        initialize();
+
+    </script>
+</body>
+
+</html>
