@@ -4,1135 +4,886 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGI System Core - Vibe Coding Environment</title>
+    <title>VSCode_Vibe_Simulator - Antigravity</title>
     <style>
-        :root {
-            --bg-color: #1e1e1e;
-            --sidebar-bg: #252526;
-            --activity-bar-bg: #333333;
-            --status-bar-bg: #007acc;
-            --status-bar-warn: #D16D06;
-            --status-bar-error: #C72E0F;
-            --tab-bg: #2d2d2d;
-            --tab-active-bg: #1e1e1e;
-            --text-color: #cccccc;
-            --line-number-color: #858585;
-            --selection-color: #264f78;
-            --cursor-color: #d4d4d4;
-            --terminal-bg: #1e1e1e;
-            --scrollbar-bg: #424242;
-
-            /* Syntax Highlighting (Dark+) */
-            --kwd: #569cd6;
-            /* Keyword */
-            --kwd-c: #c586c0;
-            /* Control Keyword */
-            --str: #ce9178;
-            /* String */
-            --num: #b5cea8;
-            /* Number */
-            --var: #9cdcfe;
-            /* Variable */
-            --func: #dcdcaa;
-            /* Function */
-            --type: #4ec9b0;
-            /* Type */
-            --cmt: #6a9955;
-            /* Comment */
-            --macro: #dcdcaa;
-            /* Macro */
-        }
-
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0
         }
 
         body,
         html {
-            margin: 0;
-            padding: 0;
             height: 100vh;
-            width: 100vw;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             overflow: hidden;
+            background: #1e1e1e;
+            color: #ccc;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 13px;
+            user-select: none;
             display: flex;
             flex-direction: column;
-            user-select: none;
-            /* Prevent selection for realism */
+            cursor: default
         }
 
-        /* --- Layout Grid --- */
-        .workspace {
+        .title-bar {
+            height: 30px;
+            background: #3c3c3c;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            border-bottom: 1px solid #222;
+            position: relative;
+            flex-shrink: 0
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding-left: 10px
+        }
+
+        .menu-bar {
+            display: flex;
+            gap: 2px;
+            margin-left: 8px
+        }
+
+        .menu-item {
+            padding: 2px 6px;
+            cursor: default;
+            border-radius: 3px
+        }
+
+        .menu-item:hover {
+            background: #505050
+        }
+
+        .title-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #999
+        }
+
+        .title-right {
+            display: flex;
+            align-items: center;
+            height: 100%
+        }
+
+        .title-btn {
+            padding: 0 10px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer
+        }
+
+        .title-btn:hover {
+            background: #505050
+        }
+
+        .wc {
+            display: flex;
+            height: 100%
+        }
+
+        .wc div {
+            width: 46px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer
+        }
+
+        .wc div:hover {
+            background: #505050
+        }
+
+        .wc .close:hover {
+            background: #e81123
+        }
+
+        .main {
             display: flex;
             flex: 1;
-            height: calc(100vh - 22px);
+            overflow: hidden
         }
 
-        /* --- Activity Bar (Leftmost) --- */
-        .activity-bar {
+        .act-bar {
             width: 48px;
-            background-color: var(--activity-bar-bg);
+            background: #333;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 10px;
-            z-index: 10;
+            border-right: 1px solid #222;
+            flex-shrink: 0
         }
 
-        .activity-icon {
+        .act-item {
             width: 48px;
             height: 48px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
-            color: #858585;
             cursor: pointer;
+            opacity: .5;
             position: relative;
+            color: #ccc
         }
 
-        .activity-icon.active {
-            color: white;
-            border-left: 2px solid white;
+        .act-item:hover {
+            opacity: 1
         }
 
-        .activity-icon:hover {
-            color: white;
+        .act-item.active {
+            opacity: 1;
+            border-left: 2px solid #fff
         }
 
-        .badge {
+        .act-item svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor
+        }
+
+        .act-badge {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            top: 8px;
+            right: 6px;
             background: #007acc;
-            color: white;
+            color: #fff;
             font-size: 9px;
             padding: 1px 4px;
-            border-radius: 10px;
-            font-weight: bold;
+            border-radius: 8px;
+            font-weight: bold
         }
 
-        /* --- Sidebar (Explorer) --- */
-        .sidebar {
-            width: 250px;
-            background-color: var(--sidebar-bg);
-            border-right: 1px solid #000;
+        .act-spacer {
+            flex: 1
+        }
+
+        .codex {
+            width: 300px;
+            background: #181818;
             display: flex;
             flex-direction: column;
-            font-size: 13px;
+            border-right: 1px solid #2b2b2b;
+            flex-shrink: 0
         }
 
-        .sidebar-header {
-            padding: 10px 20px;
+        .codex-hdr {
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600
+        }
+
+        .codex-sec {
+            padding: 8px 16px;
             font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .file-tree {
-            padding-top: 5px;
-        }
-
-        .folder-item {
-            padding: 4px 10px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            color: #ccc;
-            font-weight: bold;
-        }
-
-        .folder-arrow {
-            font-size: 10px;
-            margin-right: 5px;
-            transition: transform 0.2s;
-        }
-
-        .folder-open .folder-arrow {
-            transform: rotate(90deg);
-        }
-
-        .file-list {
-            display: none;
-            margin-left: 10px;
-            border-left: 1px solid #333;
-        }
-
-        .folder-open .file-list {
-            display: block;
-        }
-
-        .file-item {
-            padding: 3px 10px 3px 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
-
-        .file-item:hover {
-            background-color: #2a2d2e;
-        }
-
-        .file-item.active {
-            background-color: #37373d;
-            color: white;
-        }
-
-        .file-icon {
-            margin-right: 6px;
-            width: 16px;
-            text-align: center;
-        }
-
-        .git-status {
-            margin-left: auto;
-            font-size: 11px;
-            font-weight: bold;
-            color: #d7ba7d;
-            /* Modified */
-        }
-
-        .git-added {
-            color: #58a6ff;
-        }
-
-        /* Added */
-
-        /* --- Main Editor Area --- */
-        .editor-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-color);
-            position: relative;
-        }
-
-        /* Tabs */
-        .tab-bar {
-            background-color: var(--bg-color);
-            /* VS Code default helps blend */
-            display: flex;
-            height: 35px;
-            overflow-x: auto;
-            background: #252526;
-        }
-
-        .tab {
-            padding: 0 10px;
-            min-width: 120px;
-            max-width: 200px;
-            background-color: var(--tab-bg);
+            font-weight: 600;
             color: #969696;
-            border-right: 1px solid #1e1e1e;
-            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .task-item {
+            padding: 6px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .task-item:hover {
+            background: #2a2d2e
+        }
+
+        .task-time {
+            color: #6e6e6e;
+            font-size: 11px;
+            margin-left: 8px;
+            flex-shrink: 0
+        }
+
+        .view-all {
+            padding: 4px 16px;
+            font-size: 11px;
+            color: #6e6e6e;
+            cursor: pointer
+        }
+
+        .codex-empty {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px
+        }
+
+        .codex-input {
+            padding: 8px 12px;
+            border-top: 1px solid #2b2b2b
+        }
+
+        .codex-input div {
+            background: #2d2d2d;
+            border: 1px solid #3e3e42;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #6e6e6e
+        }
+
+        .codex-tb {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            cursor: pointer;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: #969696;
+            border-top: 1px solid #2b2b2b
         }
 
-        .tab.active {
-            background-color: var(--tab-active-bg);
-            color: white;
-            border-top: 1px solid #007acc;
+        .codex-tb-l,
+        .codex-tb-r {
+            display: flex;
+            align-items: center;
+            gap: 6px
         }
 
-        .tab-icon {
-            margin-right: 6px;
+        .send-btn {
+            width: 26px;
+            height: 26px;
+            background: #007acc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer
         }
 
-        .tab-close {
-            font-size: 14px;
-            margin-left: 8px;
-            border-radius: 3px;
-            padding: 0 2px;
+        .send-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: #fff
         }
 
-        .tab-close:hover {
-            background-color: #444;
-            color: white;
-        }
-
-        /* Code View */
-        .editor-workspace {
+        .center {
             flex: 1;
             display: flex;
-            position: relative;
-            overflow: hidden;
+            flex-direction: column;
+            overflow: hidden
         }
 
-        .editor-gutter {
-            width: 50px;
-            background-color: var(--bg-color);
-            color: var(--line-number-color);
-            text-align: right;
-            font-size: 14px;
-            padding-right: 15px;
-            padding-top: 10px;
-            border-right: 1px solid #333;
-            /* subtle separator */
-            user-select: none;
-        }
-
-        .code-view {
+        .editor-area {
             flex: 1;
-            padding: 10px 0 0 10px;
-            font-size: 14px;
-            line-height: 20px;
+            display: flex;
             overflow: hidden;
-            white-space: pre;
-            position: relative;
+            position: relative
         }
 
-        /* Minimap (Approximation) */
+        .gutter {
+            width: 55px;
+            text-align: right;
+            padding: 5px 15px 5px 0;
+            color: #858585;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            line-height: 21px;
+            flex-shrink: 0;
+            overflow: hidden
+        }
+
+        .code-area {
+            flex: 1;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 21px;
+            color: #d4d4d4;
+            white-space: pre;
+            overflow: hidden;
+            padding: 5px;
+            position: relative
+        }
+
         .minimap {
             width: 60px;
-            height: 100%;
-            background-color: #1e1e1e;
-            opacity: 0.8;
-            border-left: 1px solid #333;
+            background: #1e1e1e;
+            border-left: 1px solid #2b2b2b;
+            opacity: .7;
             overflow: hidden;
+            flex-shrink: 0
         }
 
-        .minimap-content {
-            transform: scale(0.15);
-            transform-origin: top left;
-            width: 600%;
-            /* Compensate scale */
-            pointer-events: none;
-            padding-top: 10px;
-        }
-
-        /* --- Right Sidebar (AI Assistant) --- */
-        .ai-sidebar {
-            width: 300px;
-            background-color: var(--sidebar-bg);
-            border-left: 1px solid #000;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .ai-header {
-            padding: 10px;
-            font-size: 12px;
-            font-weight: bold;
-            border-bottom: 1px solid #333;
-            background: #252526;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .chat-container {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 13px;
-        }
-
-        .chat-msg {
-            margin-bottom: 12px;
-            padding: 8px;
-            border-radius: 4px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .chat-msg.system {
-            background: #2d2d30;
-            border-left: 3px solid #007acc;
-        }
-
-        .chat-msg.thinking {
-            color: #858585;
-            font-style: italic;
-            font-size: 12px;
-        }
-
-        .chat-msg.success {
-            border-left: 3px solid #4ec9b0;
-            background: #1e3a2f;
-        }
-
-        /* --- Panel (Terminal) --- */
-        .panel {
-            height: 200px;
-            background-color: var(--terminal-bg);
-            border-top: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .panel-header {
-            display: flex;
-            gap: 20px;
-            padding: 5px 15px;
-            border-bottom: 1px solid #333;
-            text-transform: uppercase;
-            font-size: 11px;
-            color: #999;
-            cursor: pointer;
-        }
-
-        .panel-tab.active {
-            color: white;
-            border-bottom: 1px solid white;
-        }
-
-        .terminal-content {
-            flex: 1;
-            padding: 10px;
-            font-size: 12px;
-            color: #cccccc;
-            font-family: 'Consolas', monospace;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column-reverse;
-            /* Pin to bottom */
-        }
-
-        .term-line {
-            margin-bottom: 2px;
-            line-height: 1.3;
-        }
-
-        .term-prompt {
-            color: #98c379;
-        }
-
-        .term-path {
-            color: #61afef;
-        }
-
-        .term-error {
-            color: #e06c75;
-        }
-
-        .term-warn {
-            color: #e5c07b;
-        }
-
-        .term-info {
-            color: #98c379;
-        }
-
-        .term-progress {
-            color: #569cd6;
-        }
-
-        /* --- Status Bar --- */
-        .status-bar {
-            height: 22px;
-            background-color: var(--status-bar-bg);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 10px;
-            font-size: 11px;
-            color: white;
-            z-index: 20;
-        }
-
-        .status-section {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-        }
-
-        .status-item:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-
-        /* Sync icon rotation */
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .spinning {
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-
-        /* --- Animations & Effects --- */
-        /* Blinking Cursor */
-        .cursor {
+        .cursor-blink {
             display: inline-block;
             width: 2px;
             height: 1em;
             background: #d4d4d4;
-            animation: blink 1s step-end infinite;
-            vertical-align: bottom;
+            animation: blink 1s step-end infinite
         }
 
         @keyframes blink {
             50% {
-                opacity: 0;
+                opacity: 0
             }
         }
 
-        /* Intellisense Popup */
-        .intellisense {
-            position: absolute;
+        .tabs {
+            height: 35px;
             background: #252526;
-            border: 1px solid #454545;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            width: 250px;
-            z-index: 100;
-            display: none;
-            font-size: 13px;
+            display: flex;
+            overflow: hidden;
+            flex-shrink: 0
         }
 
-        .intellisense-item {
-            padding: 2px 5px;
+        .tab {
+            background: #2d2d2d;
+            color: #969696;
+            border-right: 1px solid #2b2b2b;
+            padding: 0 12px;
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            height: 100%;
+            cursor: pointer;
+            gap: 6px;
+            border-top: 1px solid transparent
+        }
+
+        .tab.active {
+            background: #1e1e1e;
+            color: #fff;
+            border-top: 1px solid #007fd4
+        }
+
+        .tab-close {
+            margin-left: auto;
+            font-size: 14px;
+            opacity: 0
+        }
+
+        .tab:hover .tab-close {
+            opacity: 1
+        }
+
+        .breadcrumbs {
+            height: 22px;
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            font-size: 11px;
+            color: #969696;
+            border-bottom: 1px solid #2b2b2b;
+            flex-shrink: 0
+        }
+
+        .bc-sep {
+            margin: 0 5px;
+            opacity: .6
+        }
+
+        .term-panel {
+            height: 170px;
+            border-top: 1px solid #2b2b2b;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0
+        }
+
+        .term-tb {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            height: 32px;
+            border-bottom: 1px solid #2b2b2b;
+            font-size: 11px;
+            color: #969696
+        }
+
+        .term-tb-l,
+        .term-tb-r {
+            display: flex;
+            align-items: center;
+            gap: 4px
+        }
+
+        .term-tab {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #ccc
+        }
+
+        .term-body {
+            flex: 1;
+            padding: 8px 16px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            overflow-y: auto
+        }
+
+        .term-line {
+            margin-bottom: 2px
+        }
+
+        .agent {
+            width: 340px;
+            background: #181818;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #2b2b2b;
+            flex-shrink: 0
+        }
+
+        .agent-hdr {
+            padding: 10px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            border-bottom: 1px solid #2b2b2b;
+            display: flex;
+            justify-content: space-between
+        }
+
+        .agent-hdr-icons {
+            display: flex;
+            gap: 8px
+        }
+
+        .agent-hdr-icons svg {
+            width: 14px;
+            height: 14px;
+            fill: #888;
+            cursor: pointer
+        }
+
+        .agent-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            overflow: hidden
+        }
+
+        .agent-proj {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px
+        }
+
+        .agent-inp {
+            background: #2d2d2d;
+            border: 1px solid #3e3e42;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #6e6e6e;
+            margin-bottom: 12px
+        }
+
+        .agent-opts {
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #ccc;
+            font-size: 12px;
+            color: #969696
         }
 
-        .intellisense-item.selected {
+        .agent-msgs {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 12px
+        }
+
+        .chat-bubble {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            background: #2d2d30;
+            border: 1px solid #3e3e42;
+            border-left: 3px solid #007acc;
+            font-size: 12px;
+            line-height: 1.5
+        }
+
+        .agent-footer {
+            padding: 10px 16px;
+            border-top: 1px solid #2b2b2b;
+            font-size: 11px;
+            color: #6e6e6e
+        }
+
+        .agent-session {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px
+        }
+
+        .status-bar {
+            height: 22px;
+            background: #007acc;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            font-size: 11px;
+            flex-shrink: 0
+        }
+
+        .st-l,
+        .st-r {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .st-item {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 4px;
+            height: 22px
+        }
+
+        .st-item:hover {
+            background: rgba(255, 255, 255, .12)
+        }
+
+        .st-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block
+        }
+
+        .dot-g {
+            background: #4ec9b0
+        }
+
+        .kwd {
+            color: #569cd6
+        }
+
+        .typ {
+            color: #4ec9b0
+        }
+
+        .fn {
+            color: #dcdcaa
+        }
+
+        .str {
+            color: #ce9178
+        }
+
+        .cmt {
+            color: #6a9955
+        }
+
+        .num {
+            color: #b5cea8
+        }
+
+        .kw2 {
+            color: #c586c0
+        }
+
+        .intellisense {
+            position: absolute;
+            width: 280px;
+            background: #252526;
+            border: 1px solid #454545;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .5);
+            z-index: 100;
+            display: none;
+            font-family: Consolas, monospace;
+            font-size: 13px
+        }
+
+        .suggest-row {
+            padding: 2px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc
+        }
+
+        .suggest-row.sel {
             background: #04395e;
-            color: white;
+            color: #fff
         }
 
-        .icon-box {
+        .sug-icon {
             width: 14px;
             height: 14px;
-            background: var(--kwd);
-            /* placeholder */
-            display: inline-block;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            border-radius: 2px
         }
 
-        /* Syntax Color Helpers */
-        .h-kwd {
-            color: var(--kwd);
+        .search-overlay {
+            position: absolute;
+            top: 0;
+            right: 20px;
+            width: 360px;
+            background: #252526;
+            border: 1px solid #454545;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .5);
+            z-index: 200;
+            display: none;
+            padding: 6px;
+            border-radius: 0 0 4px 4px
         }
 
-        .h-str {
-            color: var(--str);
+        .search-input {
+            width: 100%;
+            background: #3c3c3c;
+            border: 1px solid #007acc;
+            color: #fff;
+            padding: 5px 8px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            border-radius: 2px;
+            outline: none
         }
 
-        .h-func {
-            color: var(--func);
+        .search-info {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            padding: 0 4px
         }
 
-        .h-var {
-            color: var(--var);
+        .breakpoint {
+            background: rgba(255, 0, 0, .15);
+            border-left: 3px solid #e51400
         }
 
-        .h-cmt {
-            color: var(--cmt);
+        .debug-vars {
+            position: absolute;
+            bottom: 10px;
+            right: 80px;
+            background: #252526;
+            border: 1px solid #454545;
+            padding: 8px 12px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+            z-index: 100;
+            display: none;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .5)
         }
 
-        .h-type {
-            color: var(--type);
+        .debug-var-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 2px
         }
 
-        .h-num {
-            color: var(--num);
+        .debug-var-name {
+            color: #9cdcfe
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
+        .debug-var-val {
+            color: #ce9178
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .fake-cursor {
+            position: fixed;
+            width: 12px;
+            height: 18px;
+            z-index: 9999;
+            pointer-events: none;
+            display: none
         }
     </style>
 </head>
 
 <body>
-
-    <div class="workspace">
-        <!-- Vertical Activity Bar -->
-        <div class="activity-bar">
-            <div class="activity-icon active">📄<div class="badge" id="file-badge">2</div>
-            </div>
-            <div class="activity-icon">🔍</div>
-            <div class="activity-icon">🕊️<div class="badge">12</div>
-            </div> <!-- Git -->
-            <div class="activity-icon">🐞</div>
-            <div class="activity-icon">🧩</div>
-            <div style="flex:1"></div>
-            <div class="activity-icon">⚙️</div>
+    <div class="title-bar">
+        <div class="title-left">
+            <svg viewBox="0 0 16 16" style="width:16px;height:16px;fill:#007acc">
+                <path
+                    d="M11.6 2.6L8.4 1l-7 2.5v9l7 2.5 7.6-3.8V4l-4.4-1.4zM4.5 12.6V3.4l2.8 1v7.2l-2.8 1zm7-1.7l-2.8 1.4V5.1l2.8-1v6.8z" />
+            </svg>
+            <div class="menu-bar"><span class="menu-item">File(F)</span><span class="menu-item">Edit(E)</span><span
+                    class="menu-item">Selection(S)</span><span class="menu-item">View(V)</span><span
+                    class="menu-item">Go(G)</span><span class="menu-item">Run(R)</span><span
+                    class="menu-item">Terminal(T)</span><span class="menu-item">···</span></div>
         </div>
-
-        <!-- Sidebar Explorer -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <span>Explorer</span>
-                <span>...</span>
-            </div>
-            <div class="sidebar-header" style="background:#333; margin-top:0px;">
-                <span>vibe-coding-system</span>
-            </div>
-            <div class="file-tree" id="file-tree">
-                <!-- Injected via JS -->
+        <div class="title-center">VSCode_Vibe_Simulator - Antigravity</div>
+        <div class="title-right">
+            <div class="title-btn">Open Agent Manager</div>
+            <div class="wc">
+                <div><svg viewBox="0 0 10 1" style="width:10px;height:10px;fill:#ccc">
+                        <rect width="10" height="1" />
+                    </svg></div>
+                <div><svg viewBox="0 0 10 10" style="width:10px;height:10px;fill:none;stroke:#ccc;stroke-width:1">
+                        <rect x=".5" y=".5" width="9" height="9" />
+                    </svg></div>
+                <div class="close"><svg viewBox="0 0 10 10" style="width:10px;height:10px;stroke:#ccc;stroke-width:1.2">
+                        <line x1="0" y1="0" x2="10" y2="10" />
+                        <line x1="10" y1="0" x2="0" y2="10" />
+                    </svg></div>
             </div>
         </div>
-
-        <!-- Main Editor Area -->
-        <div class="editor-container">
-            <!-- Tabs -->
-            <div class="tab-bar" id="tab-bar">
-                <!-- Injected via JS -->
+    </div>
+    <div class="main">
+        <div class="act-bar">
+            <div class="act-item active"><svg viewBox="0 0 24 24">
+                    <path
+                        d="M17.5 0h-9L7 1.5V6H2.5L1 7.5v15.07L2.5 24h12.07L16 22.57V18h4.7l1.3-1.5V4.5L17.5 0zM14 22.57l-.07.43H2.5V7.5H7v12.07L8.5 21h5.5v1.57zM20.5 16.5H8.5V1.5h7V6h4.5v10.5z" />
+                </svg></div>
+            <div class="act-item"><svg viewBox="0 0 24 24">
+                    <path
+                        d="M15.25 0a8.25 8.25 0 00-6.18 13.72L1 21.77l1.42 1.42 8.05-8.07A8.25 8.25 0 1015.25 0zm0 14.5a6.25 6.25 0 110-12.5 6.25 6.25 0 010 12.5z" />
+                </svg></div>
+            <div class="act-item"><svg viewBox="0 0 24 24">
+                    <path
+                        d="M21 8.2A3.7 3.7 0 0015 5.2a3.7 3.7 0 001.2 6.6 3 3 0 01-2.7 1.6h-3a4.5 4.5 0 00-3 1.2V7.6a3.7 3.7 0 10-1.5 0v8.9A3.7 3.7 0 109.6 19.8a3 3 0 013-2.8h3a4.5 4.5 0 004.2-2.8 3.7 3.7 0 001.3-6z" />
+                </svg></div>
+            <div class="act-item"><svg viewBox="0 0 24 24">
+                    <path
+                        d="M10.94 13.5l-1.32 1.32a3.73 3.73 0 00-7.24 0L1.06 13.5 0 14.56l1.72 1.72-.22.22V18H0v1.5h1.5v.08a5 5 0 00.41 1.42L.47 22.44l1.06 1.06 1.34-1.34A3.74 3.74 0 005.5 23.5a3.74 3.74 0 002.63-1.34l1.34 1.34 1.06-1.06-1.44-1.44c.2-.45.33-.93.41-1.42V19H11V18H9.5v-1.5l-.22-.22L11 14.56l-1.06-1.06z" />
+                </svg></div>
+            <div class="act-item"><svg viewBox="0 0 24 24">
+                    <path
+                        d="M13.5 1.5L15 0h7.5L24 1.5V9l-1.5 1.5H15L13.5 9V1.5zM0 15l1.5-1.5H9L10.5 15v7.5L9 24H1.5L0 22.5V15zM0 1.5L1.5 0H9l1.5 1.5V9L9 10.5H1.5L0 9V1.5zM13.5 15l1.5-1.5h7.5L24 15v7.5L22.5 24H15l-1.5-1.5V15z" />
+                </svg></div>
+            <div class="act-item" style="margin-top:4px"><svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 1C5.9 1 1 5.9 1 12s4.9 11 11 11a11 11 0 004.8-1.1l4.7 1.1-1.1-4.7A11 11 0 0023 12c0-6.1-4.9-11-11-11zm0 2c5 0 9 4 9 9s-4 9-9 9a9 9 0 01-4.4-1.1l-.3-.2-3.9.9.9-3.9-.2-.3A9 9 0 013 12c0-5 4-9 9-9z" />
+                </svg>
+                <div class="act-badge">1</div>
             </div>
-
-            <!-- Code -->
-            <div class="editor-workspace">
-                <div class="editor-gutter" id="gutter">
-                    <!-- Line numbers -->
+            <div class="act-spacer"></div>
+            <div class="act-item"><svg viewBox="0 0 24 24">
+                    <path d="M12 2a5 5 0 110 10 5 5 0 010-10zm0 12c5.5 0 10 2.2 10 5v3H2v-3c0-2.8 4.5-5 10-5z" />
+                </svg></div>
+            <div class="act-item"><svg viewBox="0 0 24 24">
+                    <path
+                        d="M19.1 12.9a7.8 7.8 0 000-1.9l2-1.6a.5.5 0 00.1-.6l-1.9-3.3a.5.5 0 00-.6-.2l-2.4 1c-.5-.4-1-.7-1.6-.9l-.4-2.5a.5.5 0 00-.5-.4h-3.8a.5.5 0 00-.5.4l-.4 2.5c-.6.2-1.1.6-1.6.9l-2.4-1a.5.5 0 00-.6.2L2.7 8.8a.5.5 0 00.1.6l2 1.6a8 8 0 000 1.9l-2 1.6a.5.5 0 00-.1.6l1.9 3.3c.1.2.4.3.6.2l2.4-1c.5.4 1 .7 1.6.9l.4 2.5c0 .2.2.4.5.4h3.8c.2 0 .4-.2.5-.4l.4-2.5c.6-.2 1.1-.6 1.6-.9l2.4 1c.2.1.5 0 .6-.2l1.9-3.3a.5.5 0 00-.1-.6l-2-1.6zM12 15.6a3.6 3.6 0 110-7.2 3.6 3.6 0 010 7.2z" />
+                </svg></div>
+        </div>
+        <div class="codex">
+            <div class="codex-hdr">Codex</div>
+            <div class="codex-sec"><span>Tasks</span></div>
+            <div class="task-item"><span style="flex:1">Explain download code issue and screenshot display error</span>
+            </div>
+            <div class="task-item"><span style="flex:1">Start project frontend & backend services? wait no
+                    quote...</span><span class="task-time">2 d</span></div>
+            <div class="task-item"><span style="flex:1">Review files for output optimization Oops invalid JSON
+                    d...</span><span class="task-time">2 d</span></div>
+            <div class="view-all">View all (29)</div>
+            <div class="codex-empty"><svg viewBox="0 0 64 64" fill="#444" style="width:80px;height:80px;opacity:.3">
+                    <path
+                        d="M48 8H16C11.6 8 8 11.6 8 16v22c0 4.4 3.6 8 8 8h6v10l12-10h14c4.4 0 8-3.6 8-8V16c0-4.4-3.6-8-8-8zm0 30H28l-6 5V38h-6V16h32v22z" />
+                </svg></div>
+            <div class="codex-input">
+                <div>Ask Codex anything, @ add files, / run commands</div>
+            </div>
+            <div class="codex-tb">
+                <div class="codex-tb-l"><span style="color:#888;font-size:15px">+</span><span>GPT-5.3-Codex ▾</span>
                 </div>
-                <div class="code-view" id="code-view">
-                    <!-- Typing happens here -->
+                <div class="codex-tb-r"><span style="color:#4ec9b0">🔒 Full access ▾</span>
+                    <div class="send-btn"><svg viewBox="0 0 16 16">
+                            <path d="M1 1l14 7-14 7V9l8-1-8-1V1z" />
+                        </svg></div>
                 </div>
-                <!-- Intellisense Popup -->
-                <div class="intellisense" id="intellisense">
-                    <div class="intellisense-item selected"><span class="icon-box"
-                            style="background:#c586c0"></span>OptimizationStrategy</div>
-                    <div class="intellisense-item"><span class="icon-box"
-                            style="background:#dcdcaa"></span>optimize_neural_net</div>
-                    <div class="intellisense-item"><span class="icon-box" style="background:#9cdcfe"></span>opt_level
+            </div>
+        </div>
+        <div class="center">
+            <div class="tabs" id="tabs-bar"></div>
+            <div class="breadcrumbs" id="breadcrumbs"><span>src</span><span
+                    class="bc-sep">›</span><span>core</span><span class="bc-sep">›</span><span id="bc-file"
+                    style="color:#ccc">loading...</span></div>
+            <div class="editor-area">
+                <div class="gutter" id="gutter"></div>
+                <div class="code-area" id="code"></div>
+                <div class="intellisense" id="intellisense"></div>
+                <div class="search-overlay" id="search-box"><input class="search-input" id="search-input" readonly>
+                    <div class="search-info" id="search-info"></div>
+                </div>
+                <div class="debug-vars" id="debug-vars"></div>
+                <div class="minimap"><canvas id="mm-canvas"></canvas></div>
+            </div>
+            <div class="term-panel">
+                <div class="term-tb">
+                    <div class="term-tb-l"><span style="color:#888">···</span><span
+                            style="color:#888;font-size:15px;cursor:pointer">+ ▾</span>
+                        <div class="term-tab"><svg viewBox="0 0 16 16" style="width:14px;height:14px;fill:#ccc">
+                                <path d="M6 3L1 8l5 5 1-1-4-4 4-4-1-1z" />
+                                <path d="M15 7H7v2h8V7z" />
+                            </svg> powershell</div>
                     </div>
+                    <div class="term-tb-r"><span style="color:#888">⊞ ⊟ ···</span></div>
                 </div>
-
-                <div class="minimap">
-                    <div class="minimap-content" id="minimap-content">
-                        <!-- Mirror code here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Terminal Panel -->
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-tab">PROBLEMS</div>
-                    <div class="panel-tab">OUTPUT</div>
-                    <div class="panel-tab active">TERMINAL</div>
-                    <div class="panel-tab">DEBUG CONSOLE</div>
-                    <div style="flex:1"></div>
-                    <div class="panel-tab">bash +</div>
-                </div>
-                <div class="terminal-content">
-                    <div id="terminal-lines"></div>
-                </div>
+                <div class="term-body" id="term-out"></div>
             </div>
         </div>
-
-        <!-- Right AI Sidebar -->
-        <div class="ai-sidebar">
-            <div class="ai-header">
-                <span>🤖 AI COLLABORATOR (BETA)</span>
-                <span>...</span>
+        <div class="agent">
+            <div class="agent-hdr"><span>Agent</span>
+                <div class="agent-hdr-icons"><svg viewBox="0 0 16 16">
+                        <path d="M14 7v1H8v6H7V8H1V7h6V1h1v6h6z" />
+                    </svg><svg viewBox="0 0 16 16">
+                        <path
+                            d="M9.1 4.4L8.6 2H7.4l-.5 2.4-.7.3-2-1.3-.9.8 1.3 2-.2.7-2.4.5v1.2l2.4.5.3.8-1.3 2 .8.8 2-1.3.8.3.4 2.4h1.2l.5-2.4.8-.3 2 1.3.8-.8-1.3-2 .3-.7 2.4-.4V7.4l-2.4-.5-.3-.8 1.3-2-.8-.8-2 1.3-.7-.3zM8 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z" />
+                    </svg><svg viewBox="0 0 16 16">
+                        <path
+                            d="M14 8a1 1 0 11-2 0 1 1 0 012 0zm-5 0a1 1 0 11-2 0 1 1 0 012 0zM5 8a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg><svg viewBox="0 0 16 16">
+                        <path d="M3.7 3l8.6 8.6-.7.7L3 3.7zM12.3 3L3.7 11.6l.7.7L13 3.7z" />
+                    </svg></div>
             </div>
-            <div class="chat-container" id="chat-container">
-                <!-- AI thoughts go here -->
+            <div class="agent-content">
+                <div class="agent-proj">VSCode_Vibe_Simulator</div>
+                <div class="agent-inp">Ask anything (Ctrl+I), @ to mention, / for workflows</div>
+                <div class="agent-opts"><span style="color:#888">+ ⌄</span><span>▾ Planning</span><span>⌄ Gemini 3 Pro
+                        (High)</span></div>
+                <div class="agent-msgs" id="agent-chat"></div>
+            </div>
+            <div class="agent-footer">
+                <div class="agent-session"><span>VS Code Vibe Coding Simulator</span><span>22h</span></div>
+                <div>AI may make mistakes. Double-check all generated code.</div>
             </div>
         </div>
     </div>
-
-    <!-- Status Bar -->
-    <div class="status-bar" id="status-bar">
-        <div class="status-section">
-            <div class="status-item" style="background:#16825D; padding: 0 5px;">><span
-                    style="transform:rotate(180deg)">⚡</span> SSH: Remote</div>
-            <div class="status-item"><span style="margin-right:5px">🚫</span>0 <span style="margin-right:5px">⚠️</span>0
-            </div>
-            <div class="status-item" id="git-branch"><span style="margin-right:5px">🕊️</span>main*</div>
-            <div class="status-item" id="sync-status"><span class="spinning">💫</span> Syncing...</div>
+    <div class="status-bar">
+        <div class="st-l">
+            <div class="st-item"> main*</div>
+            <div class="st-item">⊘ 0 ⚠ 0</div>
         </div>
-        <div class="status-section">
-            <div class="status-item" id="cursor-pos">Ln 12, Col 45</div>
-            <div class="status-item">UTF-8</div>
-            <div class="status-item" id="lang-mode">Python</div>
-            <div class="status-item">Prettier</div>
-            <div class="status-item">🔔</div>
+        <div class="st-r">
+            <div class="st-item">☑ Auto-Accept: ON</div>
+            <div class="st-item"><span class="st-dot dot-g"></span> claude: 100% | <span class="st-dot dot-g"></span>
+                gemini 3 pro: 100%</div>
+            <div class="st-item" id="st-pos">Ln 1, Col 1</div>
+            <div class="st-item">Antigravity - Settings</div>
         </div>
     </div>
-
-    <script>
-        // --- Configuration: The "Vibe" Scenarios ---
-
-        const scenarios = [
-            {
-                name: "quantum_core.rs",
-                lang: "Rust",
-                icon: "🦀", // Rustacean
-                gitStat: "M",
-                color: "#CE412B",
-                content: `use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc;
-
-/// The core quantum processing unit for the vibe engine
-pub struct QuantumVibe {
-    entropy_pool: Arc<Mutex<Vec<f64>>>,
-    coherence_factor: f64,
-}
-
-impl QuantumVibe {
-    pub fn new() -> Self {
-        log::info!("Initializing Quantum Vibe Engine...");
-        let pool = (0..1024).map(|_| rand::random::<f64>()).collect();
-        
-        Self {
-            entropy_pool: Arc::new(Mutex::new(pool)),
-            coherence_factor: 0.997, # Correction: adjust precision
-        }
-    }
-
-    /// Asynchronously collapses the wavefunction
-    pub async fn collapse_wavefunction(&self, intensity: f64) -> Result<f64, VibeError> {
-        let mut pool = self.entropy_pool.lock().unwrap();
-        
-        // Critical Section: Re-balancing matrix
-        if intensity > 1.0 {
-            log::warn!("Intensity overflow! Dampening field...");
-            return Ok(self.coherence_factor * 0.5);
-        }
-
-        // Apply heuristic optimization
-        let result = pool.iter().sum::<f64>() / intensity;
-        Ok(result)
-    }
-}`,
-                logs: [
-                    "Compiling vibe-core v0.1.0 (C:/projects/vibe-core)...",
-                    "   Compiling tokio v1.28.0",
-                    "   Compiling serde v1.0.163",
-                    "warning: unused variable: `ctx`",
-                    "   --> src/main.rs:45:9",
-                    "    |",
-                    "45  |     let ctx = Context::new();",
-                    "    |         ^^^ help: if this is intentional, prefix it with an underscore: `_ctx`",
-                    "Finished dev [unoptimized + debuginfo] target(s) in 2.4s",
-                    "Running `target/debug/vibe-core`",
-                    "[INFO] Quantum coherence established at 99.7%",
-                    "[WARN] Entropy pool low, regenerating...",
-                    "[INFO] Vibe check passed."
-                ],
-                chat: [
-                    { type: 'thinking', text: 'Analyzing thread safety in Mutex lock...' },
-                    { type: 'system', text: 'Detected potential deadlock in collapse_wavefunction. Recommending async mutex pattern.' },
-                    { type: 'success', text: 'Refactored to use tokio::sync::Mutex for non-blocking locks.' },
-                    { type: 'thinking', text: 'Optimizing memory layout for cache locality...' }
-                ],
-                intellisense: ["entropy_pool", "collapse_wavefunction", "coherence_factor", "Arc::new"]
-            },
-            {
-                name: "NeuralNetwork.py",
-                lang: "Python",
-                icon: "🐍",
-                gitStat: "A",
-                color: "#FFE873",
-                content: `import torch
-import torch.nn as nn
-import torch.optim as optim
-from transformers import AutoModel, AutoTokenizer
-
-class VibeTransformer(nn.Module):
-    def __init__(self, hidden_dim=768, num_heads=12):
-        super(VibeTransformer, self).__init__()
-        self.embedding = nn.Embedding(50000, hidden_dim)
-        self.encoder = nn.TransformerEncoderLayer(d_model=hidden_dim, nhead=num_heads)
-        self.output_head = nn.Linear(hidden_dim, 1)
-
-    def forward(self, x):
-        # Embed the input sequence
-        x = self.embedding(x)
-        
-        # Apply self-attention mechanism
-        # Optimization: Use FlashAttention for 3x speedup
-        x = self.encoder(x)
-        
-        # Aggregate logic
-        return torch.sigmoid(self.output_head(x.mean(dim=1)))
-
-# Initialize Training Loop
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = VibeTransformer().to(device)
-optimizer = optim.AdamW(model.parameters(), lr=5e-5)
-
-print(f"Model deployed on {device} with {sum(p.numel() for p in model.parameters())} params")`,
-                logs: [
-                    "Cuda support: ENABLED (NVIDIA RTX 4090)",
-                    "Loading pretrained weights for 'bert-base-uncased'...",
-                    "Downloading: 100% |██████████| 440M/440M [00:12<00:00, 35.2MB/s]",
-                    "Epoch 1/100 commenced...",
-                    "Batch 100: Loss = 0.4521, Accuracy = 82%",
-                    "Batch 200: Loss = 0.3102, Accuracy = 89%",
-                    "Batch 300: Loss = 0.1504, Accuracy = 94%",
-                    "[INFO] Convergence detected. Adjusting learning rate...",
-                    "Saving checkpoint to /models/vibe_v1.pth..."
-                ],
-                chat: [
-                    { type: 'thinking', text: 'Scanning for GPU bottlenecks...' },
-                    { type: 'system', text: 'Recommendation: Enable mixed-precision training (FP16) to reduce VRAM usage by 40%.' },
-                    { type: 'thinking', text: 'Implementing gradient scaling...' },
-                    { type: 'success', text: 'Applied Automatic Mixed Precision (AMP).' }
-                ],
-                intellisense: ["torch.cuda", "nn.Linear", "nn.TransformerEncoderLayer", "optimizer.step"]
-            },
-            {
-                name: "Dashboard.tsx",
-                lang: "TypeScript React",
-                icon: "⚛️",
-                gitStat: "M",
-                color: "#61DAFB",
-                content: `import React, { useState, useEffect, useMemo } from 'react';
-import { VibeChart } from './components/Charts';
-import { useDataStream } from './hooks/useStream';
-
-interface Props {
-  userId: string;
-  theme: 'dark' | 'light';
-}
-
-export const Dashboard: React.FC<Props> = ({ userId, theme }) => {
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const { stream, isConnected } = useDataStream(userId);
-
-  // Memoize heavy calculations to prevent re-renders
-  const processedData = useMemo(() => {
-    return metrics.map(m => ({
-      ...m,
-      value: m.value * 1.5, // Scaling factor
-      timestamp: new Date(m.time).toLocaleTimeString()
-    }));
-  }, [metrics]);
-
-  useEffect(() => {
-    if (!stream) return;
-    
-    const handleUpdate = (data: any) => {
-      setMetrics(prev => [...prev.slice(-50), data]);
-    };
-
-    stream.on('data', handleUpdate);
-    return () => stream.off('data', handleUpdate);
-  }, [stream]);
-
-  if (!isConnected) return <div className="loader">Connecting to VibeNet...</div>;
-
-  return (
-    <div className={\`dashboard \${theme}\`}>
-      <h1>System Status: ONLINE</h1>
-      <VibeChart data={processedData} color="#00ff00" />
-    </div>
-  );
-};`,
-                logs: [
-                    "[webpack-cli] Compilation starting...",
-                    "[eslint] 0 errors, 0 warnings",
-                    "Files successfully emitted",
-                    "Waiting for file changes...",
-                    "   98% after emitting CopyPlugin",
-                    "   99% after emitting",
-                    "Compiled successfully.",
-                    "[HMR] Waiting for update signal from WDS...",
-                    "[HMR] bundle.js updated"
-                ],
-                chat: [
-                    { type: 'thinking', text: 'Reviewing React render cycles...' },
-                    { type: 'system', text: 'Detected unnecessary re-render in Dashboard component. Logic implies `stream` object identity changes too often.' },
-                    { type: 'thinking', text: 'Refactoring to separate socket logic from UI presentation...' },
-                    { type: 'success', text: 'Performance score increased by 15%.' }
-                ],
-                intellisense: ["useMemo", "useEffect", "useState", "processedData"]
-            }
-        ];
-
-        // --- State & DOM ---
-        let currentScenarioIdx = -1;
-        let lines = [];
-        let isTyping = false;
-        let cursorLine = 1;
-        let typingSpeedDefault = 40; // ms per char
-
-        const fileTreeEl = document.getElementById('file-tree');
-        const tabBarEl = document.getElementById('tab-bar');
-        const codeViewEl = document.getElementById('code-view');
-        const gutterEl = document.getElementById('gutter');
-        const minimapEl = document.getElementById('minimap-content');
-        const terminalEl = document.getElementById('terminal-lines');
-        const chatEl = document.getElementById('chat-container');
-        const langModeEl = document.getElementById('lang-mode');
-        const cursorPosEl = document.getElementById('cursor-pos');
-        const intellisenseEl = document.getElementById('intellisense');
-
-        // --- Core Logic ---
-
-        function initialize() {
-            renderFileTree();
-            switchScenario(0);
-            loop();
-        }
-
-        function renderFileTree() {
-            const root = document.createElement('div');
-            root.className = 'folder-item folder-open';
-            root.innerHTML = `<span class="folder-arrow">▶</span> src`;
-
-            const list = document.createElement('div');
-            list.className = 'file-list';
-
-            scenarios.forEach((sc, idx) => {
-                const div = document.createElement('div');
-                div.className = `file-item ${idx === 0 ? 'active' : ''}`;
-                div.id = `file-${idx}`;
-                div.innerHTML = `
-                <span class="file-icon" style="color: ${sc.color}">${sc.icon}</span>
-                ${sc.name}
-                <span class="git-status ${sc.gitStat === 'A' ? 'git-added' : ''}">${sc.gitStat}</span>
-            `;
-                list.appendChild(div);
-            });
-
-            root.appendChild(list);
-            fileTreeEl.appendChild(root);
-        }
-
-        function switchScenario(idx) {
-            currentScenarioIdx = idx;
-            const sc = scenarios[idx];
-
-            // Update Sidebar UI
-            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`file-${idx}`).classList.add('active');
-
-            // Update Tabs
-            tabBarEl.innerHTML = `
-            <div class="tab active">
-                <span class="tab-icon" style="color: ${sc.color}">${sc.icon}</span>
-                ${sc.name}
-                <span class="tab-close">×</span>
-            </div>
-            ${scenarios.filter((_, i) => i !== idx).slice(0, 2).map(s => `
-                <div class="tab">
-                    <span class="tab-icon" style="color: ${s.color}">${s.icon}</span>
-                    ${s.name}
-                    <span class="tab-close">×</span>
-                </div>
-            `).join('')}
-        `;
-
-            // Update Status Bar
-            langModeEl.innerText = sc.lang;
-
-            // Clear Editor
-            codeViewEl.innerHTML = '';
-            gutterEl.innerHTML = '';
-            minimapEl.innerHTML = '';
-            lines = [];
-            cursorLine = 1;
-
-            // Start Typing Sequence
-            startTyping(sc);
-        }
-
-        async function startTyping(scenario) {
-            if (isTyping) return; // simpler handling
-            isTyping = true;
-
-            // Clear terminal and chat for new context slightly
-            terminalEl.innerHTML = '';
-            chatEl.innerHTML = '';
-
-            // Initial Chat
-            addchat({ type: 'thinking', text: `Loading context for ${scenario.name}...` });
-
-            // Content chunking
-            const fullContent = scenario.content;
-            const chunks = fullContent.split('\n'); // Line by line for easier handling
-
-            for (let i = 0; i < chunks.length; i++) {
-                let lineContent = chunks[i];
-
-                // Add Line to DOM
-                const lineDiv = document.createElement('div');
-                lineDiv.className = 'line-content';
-                codeViewEl.appendChild(lineDiv);
-
-                // Gutter
-                const numDiv = document.createElement('div');
-                numDiv.innerText = i + 1;
-                gutterEl.appendChild(numDiv);
-
-                // Scroll if needed
-                lineDiv.scrollIntoView({ behavior: "smooth", block: "end" });
-                updateCursorPos(i + 1, 0);
-
-                // Typing Animation
-                // Sometimes we make a "mistake" and fix it
-                if (Math.random() > 0.8 && lineContent.length > 5) {
-                    await typeLineWithMistake(lineDiv, lineContent, scenario);
-                } else {
-                    await typeLine(lineDiv, lineContent, scenario);
-                }
-
-                // Sync Minimap
-                minimapEl.innerText = codeViewEl.innerText;
-
-                // Occasional Events
-                if (Math.random() > 0.7) addTerminalLog(scenario);
-                if (i === 3 || i === 10) addChatThinking(scenario);
-            }
-
-            // Finished file, wait then switch
-            isTyping = false;
-            await sleep(3000);
-            switchScenario((currentScenarioIdx + 1) % scenarios.length);
-        }
-
-        async function typeLine(element, text, scenario) {
-            if (!text) return;
-
-            // Split by tokens loosely for highlighting simulation (simulated)
-            // In reality, we just append text and colorize the whole line periodically or use simple regex
-
-            let currentText = "";
-
-            for (let j = 0; j < text.length; j++) {
-                currentText += text[j];
-                element.innerHTML = syntaxHighlight(currentText, scenario.lang) + '<span class="cursor"></span>';
-
-                // Intellisense trigger on dot or capital letter
-                if (text[j] === '.' || (text[j] === text[j].toUpperCase() && text[j] !== ' ')) {
-                    if (Math.random() > 0.5) await showIntellisense(element, scenario);
-                }
-
-                updateCursorPos(cursorLine, j + 1);
-                await sleep(typingSpeedDefault + Math.random() * 20);
-            }
-            // Remove cursor from line end
-            element.innerHTML = syntaxHighlight(currentText, scenario.lang);
-            cursorLine++;
-        }
-
-        async function typeLineWithMistake(element, text, scenario) {
-            const mistakeLen = 4;
-            const mistakeText = text.substring(0, text.length - 2) + "errox"; // wrong end
-
-            // Type wrong
-            for (let ch of mistakeText) {
-                element.innerHTML = syntaxHighlight(element.innerText + ch, scenario.lang) + '<span class="cursor"></span>';
-                await sleep(30);
-            }
-            await sleep(400); // realize mistake
-
-            // Backspace
-            let content = element.innerText; // plain txt
-            for (let k = 0; k < mistakeLen + 5; k++) {
-                content = content.slice(0, -1);
-                element.innerHTML = syntaxHighlight(content, scenario.lang) + '<span class="cursor"></span>';
-                await sleep(50);
-            }
-
-            // Type correct
-            await typeLine(element, text, scenario);
-        }
-
-        async function showIntellisense(element, scenario) {
-            const rect = element.getBoundingClientRect();
-            intellisenseEl.style.top = (rect.top + 20) + 'px';
-            intellisenseEl.style.left = (rect.left + (element.innerText.length * 8)) + 'px'; // approx
-            intellisenseEl.style.display = 'block';
-
-            // Custom items
-            intellisenseEl.innerHTML = scenario.intellisense.slice(0, 3).map((item, i) => `
-            <div class="intellisense-item ${i === 0 ? 'selected' : ''}"><span class="icon-box" style="background:${i === 0 ? '#c586c0' : '#9cdcfe'}"></span>${item}</div>
-        `).join('');
-
-            await sleep(600); // pause to "select"
-            intellisenseEl.style.display = 'none';
-        }
-
-        // --- Helpers ---
-
-        function syntaxHighlight(code, lang) {
-            // Very basic regex-based highlighting for visual flair
-            // Not a perfect lexer, just enough to look convincing
-            let html = code
-                .replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                .replace(/\b(import|from|class|def|return|if|else|pub|use|impl|fn|let|const|var|async|await|struct|interface|export)\b/g, '<span class="h-kwd">$1</span>')
-                .replace(/\b(self|this)\b/g, '<span class="h-kwd">$1</span>')
-                .replace(/("[^"]*")/g, '<span class="h-str">$1</span>')
-                .replace(/\b(\d+)\b/g, '<span class="h-num">$1</span>')
-                .replace(/\b(log|console|print|Ok|Err|Some|None|Vec|Arc|Mutex|useState|useEffect)\b/g, '<span class="h-type">$1</span>')
-                .replace(/#.*$/g, '<span class="h-cmt">$&</span>') // Python/Rust comments
-                .replace(/\/\/.*$/g, '<span class="h-cmt">$&</span>'); // JS comments
-
-            return html;
-        }
-
-        function addTerminalLog(scenario) {
-            const log = scenario.logs[Math.floor(Math.random() * scenario.logs.length)];
-            const div = document.createElement('div');
-            div.className = 'term-line';
-            const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
-
-            // Style based on content
-            let content = `<span style="color:#666">[${timestamp}]</span> ${log}`;
-            if (log.includes("WARN")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-warn">${log}</span>`;
-            if (log.includes("Error")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-error">${log}</span>`;
-            if (log.includes("INFO") || log.includes("successfully")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-info">${log}</span>`;
-            if (log.includes("Compiling") || log.includes("Downloading")) content = `<span style="color:#666">[${timestamp}]</span> <span class="term-progress">${log}</span>`;
-
-            div.innerHTML = content;
-            terminalEl.prepend(div); // Newest at top for this layout (flex-reverse handles visual)
-
-            if (terminalEl.children.length > 20) terminalEl.removeChild(terminalEl.lastChild);
-        }
-
-        function addChatThinking(scenario) {
-            const msg = scenario.chat[Math.floor(Math.random() * scenario.chat.length)];
-            addchat(msg);
-        }
-
-        function addchat(msgObj) {
-            const div = document.createElement('div');
-            div.className = `chat-msg ${msgObj.type}`;
-            div.innerText = msgObj.text;
-            chatEl.appendChild(div);
-            chatEl.scrollTop = chatEl.scrollHeight;
-        }
-
-        function updateCursorPos(ln, col) {
-            cursorPosEl.innerText = `Ln ${ln}, Col ${col}`;
-        }
-
-        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-        function loop() {
-            // Background tasks independent of typing
-            setInterval(() => {
-                const spin = document.querySelector('.spinning');
-                spin.style.display = (Math.random() > 0.5) ? 'inline-block' : 'none';
-                document.getElementById('sync-status').innerHTML = (Math.random() > 0.5) ? '<span class="spinning">💫</span> Syncing...' : '☁️ All changes saved';
-            }, 4000);
-        }
-
-        // Start
-        initialize();
-
-    </script>
+    <!-- Fake mouse cursor -->
+    <svg class="fake-cursor" id="fake-cursor" viewBox="0 0 12 18">
+        <polygon points="0,0 0,14 3.5,11 6.5,17 8,16 5,10 9,10" fill="#fff" stroke="#000" stroke-width=".5" />
+    </svg>
+    <script src="engine.js"></script>
 </body>
 
 </html>
