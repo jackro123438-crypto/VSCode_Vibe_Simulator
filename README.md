@@ -2,7 +2,7 @@
 
 一个纯前端的“摸鱼神器”，一键模拟高强度编码现场：代码自动敲、终端自动跑、AI 自动回，屏幕看起来很忙但你很轻松。
 
-- 在线体验（GitHub Pages）：https://jackro123438-crypto.github.io/VSCode_Vibe_Simulator/
+- 在线体验：https://vs-code-vibe-simulator.vercel.app/vibe_coding.html
 - 本地运行：双击 `vibe_coding.html`
 
 ![VSCode Vibe Simulator Preview](assets/og.png)
@@ -55,7 +55,7 @@ start vibe_coding.html
 
 VSCode Vibe Simulator is a frontend-only "fake coding" toy: auto-typing code, auto-running terminal logs, and auto-generating AI assistant messages inside a VSCode-like UI. Great for demos, screenshots, short videos, and workplace "focus mode".
 
-- Live demo (GitHub Pages): https://jackro123438-crypto.github.io/VSCode_Vibe_Simulator/
+- Live demo: https://vs-code-vibe-simulator.vercel.app/vibe_coding.html
 - Local run: open `vibe_coding.html`
 
 ### 30-second start
